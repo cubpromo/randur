@@ -11,50 +11,26 @@
         "˚⁺掃除屋へクリスマスメッセージ\n\n#ガチアクタ #GACHIAKUTA\nhttps://x.com/gachiakuta_PR/status/2003664589180010926　",
         "˚⊹掃除屋へクリスマスメッセージ\n\n\n#ガチアクタ #GACHIAKUTA\nhttps://x.com/gachiakuta_PR/status/2003667471606382637",
       ];
-
-  /* =====================================================
-         ② 配列からランダムで1つ取得する関数
-         -----------------------------------------------------
-         - シャッフルより軽量
-         - 毎回等確率で1つ返す
-      ===================================================== */
-      function pickRandom(array) {
+      
+        function pickRandom(array) {
         return array[Math.floor(Math.random() * array.length)];
       }
 
-      /* =====================================================
-         ③ 「別タブ感」を消すための localStorage キー
-         -----------------------------------------------------
-         - localStorage は同一ブラウザ内で全タブ共有
-         - sessionStorage と違い、別タブでも履歴が効く
-      ===================================================== */
-      const KEY_TEXT = "lastTweetText"; // 直前に出たツイート本文
-      const KEY_TIME = "lastTweetTime"; // 直前に引いた時刻（ミリ秒）
+      const KEY_TEXT = "lastTweetText"; 
+      const KEY_TIME = "lastTweetTime"; 
 
-      // localStorage から直前の値を取得
       const lastText = localStorage.getItem(KEY_TEXT);
       const lastTime = Number(localStorage.getItem(KEY_TIME) || 0);
 
-       /* =========================================
-         ④ クールダウン設定（45秒）
-      ========================================= */
       const COOLDOWN_MS = 30 * 1000; // 45秒
       const now = Date.now();
 
-      /* =========================================
-         ⑤ クールダウン判定
-         - 短時間連続投稿を防止
-         - BOT扱いリスクを下げる
-      ========================================= */
       if (now - lastTime < COOLDOWN_MS) {
         const remain = Math.ceil((COOLDOWN_MS - (now - lastTime)) / 1000);
         alert(`少し時間を空けてから、もう一度お試しください。（あと${remain}秒）`);
         return;
       }
 
-      /* =========================================
-         ⑥ ランダム抽選（直前と同一回避）
-      ========================================= */
       let randomText = pickRandom(tweets);
 
       if (tweets.length > 1 && lastText) {
@@ -65,16 +41,9 @@
         }
       }
 
-      /* =========================================
-         ⑦ 今回の結果を保存
-         - 次回アクセス時の比較用
-      ========================================= */
       localStorage.setItem(KEY_LAST_TEXT, randomText);
       localStorage.setItem(KEY_LAST_TIME, String(now));
 
-      /* =========================================
-         ⑧ X（旧Twitter）投稿画面へリダイレクト
-      ========================================= */
       const encodedText = encodeURIComponent(randomText);
       window.location.href =
         "https://twitter.com/intent/tweet?text=" + encodedText;
