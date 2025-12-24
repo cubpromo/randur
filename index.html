@@ -12,27 +12,97 @@
         "【掃除屋にクリスマスメッセージを届けてみよう！】\n\n#ガチアクタ #GACHIAKUTA\nhttps://x.com/gachiakuta_PR/status/2003667471606382637",
       ];
 
-      // シャッフル関数で順番をランダムに
-      function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+  /* =====================================================
+         ② 配列からランダムで1つ取得する関数
+         -----------------------------------------------------
+         - シャッフルより軽量
+         - 毎回等確率で1つ返す
+      ===================================================== */
+      function pickRandom(array) {
+        return array[Math.floor(Math.random() * array.length)];
       }
 
-      const shuffled = shuffle([...tweets]);
-      const randomText = shuffled[0];
+      /* =====================================================
+         ③ 「別タブ感」を消すための localStorage キー
+         -----------------------------------------------------
+         - localStorage は同一ブラウザ内で全タブ共有
+         - sessionStorage と違い、別タブでも履歴が効く
+      ===================================================== */
+      const KEY_TEXT = "lastTweetText"; // 直前に出たツイート本文
+      const KEY_TIME = "lastTweetTime"; // 直前に引いた時刻（ミリ秒）
 
-      // URLエンコード
+      // localStorage から直前の値を取得
+      const lastText = localStorage.getItem(KEY_TEXT);
+      const lastTime = Number(localStorage.getItem(KEY_TIME) || 0);
+
+      /* =====================================================
+         ④ クールダウン時間（任意）
+         -----------------------------------------------------
+         - 短時間で連打した際に「また同じ」を防ぐ
+         - 0 にするとクールダウンなし
+      ===================================================== */
+      const COOLDOWN_MS = 2000; // 2秒
+
+      /* =====================================================
+         ⑤ ランダム抽選の実行
+      ===================================================== */
+      let randomText = pickRandom(tweets);
+
+      /* =====================================================
+         ⑥ 直前と同じ結果を避ける処理
+         -----------------------------------------------------
+         - 候補が2つ以上ある場合のみ有効
+         - 無限ループ防止のため最大10回まで引き直す
+      ===================================================== */
+      if (tweets.length > 1 && lastText) {
+        let guard = 0;
+        while (randomText === lastText && guard < 10) {
+          randomText = pickRandom(tweets);
+          guard++;
+        }
+      }
+
+      /* =====================================================
+         ⑦ クールダウン中の追加チェック（念押し）
+         -----------------------------------------------------
+         - 別タブ連打・高速クリック時の体感ランダム性向上
+      ===================================================== */
+      const now = Date.now();
+      if (
+        COOLDOWN_MS > 0 &&
+        (now - lastTime) < COOLDOWN_MS &&
+        tweets.length > 1 &&
+        lastText
+      ) {
+        let guard = 0;
+        while (randomText === lastText && guard < 10) {
+          randomText = pickRandom(tweets);
+          guard++;
+        }
+      }
+
+      /* =====================================================
+         ⑧ 今回の結果を localStorage に保存
+         -----------------------------------------------------
+         - 次回アクセス（同一ブラウザ内）で参照される
+      ===================================================== */
+      localStorage.setItem(KEY_TEXT, randomText);
+      localStorage.setItem(KEY_TIME, String(now));
+
+      /* =====================================================
+         ⑨ Twitter(X) の intent/tweet にリダイレクト
+         -----------------------------------------------------
+         - テキストを URL エンコードして渡す
+      ===================================================== */
       const encodedText = encodeURIComponent(randomText);
-
-      // Twitter投稿リンクへリダイレクト
-      window.location.href = "https://twitter.com/intent/tweet?text=" + encodedText;
+      window.location.href =
+        "https://twitter.com/intent/tweet?text=" + encodedText;
     };
   </script>
 </head>
+
 <body>
+  <!-- JS が即リダイレクトするため、基本的には一瞬だけ表示 -->
   <p>少々お待ちください</p>
 </body>
 </html>
