@@ -12,7 +12,7 @@
         "˚⊹掃除屋へクリスマスメッセージ\n\n\n#ガチアクタ #GACHIAKUTA\nhttps://x.com/gachiakuta_PR/status/2003667471606382637",
       ];
       
-        function pickRandom(array) {
+      function pickRandom(array) {
         return array[Math.floor(Math.random() * array.length)];
       }
 
@@ -21,6 +21,8 @@
 
       const lastText = localStorage.getItem(KEY_TEXT);
       const lastTime = Number(localStorage.getItem(KEY_TIME) || 0);
+
+      const COOLDOWN_MS = 2000; // 2秒
 
       let randomText = pickRandom(tweets);
 
@@ -32,8 +34,22 @@
         }
       }
 
-      localStorage.setItem(KEY_LAST_TEXT, randomText);
-      localStorage.setItem(KEY_LAST_TIME, String(now));
+      const now = Date.now();
+      if (
+        COOLDOWN_MS > 0 &&
+        (now - lastTime) < COOLDOWN_MS &&
+        tweets.length > 1 &&
+        lastText
+      ) {
+        let guard = 0;
+        while (randomText === lastText && guard < 10) {
+          randomText = pickRandom(tweets);
+          guard++;
+        }
+      }
+
+      localStorage.setItem(KEY_TEXT, randomText);
+      localStorage.setItem(KEY_TIME, String(now));
 
       const encodedText = encodeURIComponent(randomText);
       window.location.href =
